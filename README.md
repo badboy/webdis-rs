@@ -3,7 +3,7 @@
 [webdis](http://webd.is/) is a HTTP interface for Redis, [@markuman](https://github.com/markuman) reimplemented it [in a few lines of Lua](https://github.com/markuman/tinywebdis/blob/master/turbowebdis.lua).
 I used Rust now.
 
-This code is highly experimental, uses at least 5 `unrwap()`s and is definitely not finished (or will ever be).
+This code is highly experimental, uses at least 5 `unwrap()`s and is definitely not finished (or will ever be).
 
 But it works.
 
