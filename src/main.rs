@@ -1,6 +1,8 @@
 extern crate iron;
 extern crate redis;
 
+use std::sync::Mutex;
+
 use iron::prelude::*;
 use iron::status;
 use iron::headers::ContentType;
@@ -51,18 +53,26 @@ fn to_json(val: redis::Value) -> String {
 }
 
 fn main() {
-    fn handle_redis_call(req: &mut Request) -> IronResult<Response> {
+    let conn = redis_connection();
+    let pool = Mutex::new(conn);
+
+    println!("Listening on http://localhost:3000");
+    Iron::new(move |req: &mut Request| {
         let mut path_iter = req.url.path.iter();
-        let con = redis_connection();
 
-        let command = path_iter.next().unwrap();
-        let mut cmd = redis::cmd(&command);
+        let res : redis::RedisResult<redis::Value> ;
+        {
+            let conn = pool.lock().unwrap();
 
-        for p in path_iter {
-            cmd.arg(p.clone());
+            let command = path_iter.next().unwrap();
+            let mut cmd = redis::cmd(&command);
+
+            for p in path_iter {
+                cmd.arg(p.clone());
+            }
+
+            res = cmd.query(&*conn);
         }
-
-        let res : redis::RedisResult<redis::Value> = cmd.query(&con);
 
         match res {
             Ok(res) => {
@@ -90,8 +100,5 @@ fn main() {
                 Ok(resp)
             }
         }
-    }
-
-    println!("Listening on http://localhost:3000");
-    Iron::new(handle_redis_call).http("localhost:3000").unwrap();
+    }).http("localhost:3000").unwrap();
 }
