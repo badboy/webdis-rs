@@ -74,8 +74,7 @@ fn main() {
 
         let res : redis::RedisResult<redis::Value> ;
         {
-            let conn = unwrap_or_error_response!(pool.get(),
-                                                   status::InternalServerError);
+            let conn = unwrap_or_error_response!(pool.get(), status::InternalServerError);
 
             let command = path_iter.next().unwrap();
             let mut cmd = redis::cmd(&command);
