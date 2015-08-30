@@ -1,18 +1,23 @@
 extern crate iron;
+extern crate r2d2;
+extern crate r2d2_redis;
 extern crate redis;
 
-use std::sync::Mutex;
+use std::sync::Arc;
+use r2d2_redis::RedisConnectionManager;
 
 use iron::prelude::*;
 use iron::status;
 use iron::headers::ContentType;
 use iron::mime::{Mime, TopLevel, SubLevel};
 
-fn redis_connection() -> redis::Connection {
-    let client = redis::Client::open("redis://127.0.0.1/").unwrap();
-    let con = client.get_connection().unwrap();
-
-    con
+macro_rules! unwrap_or_error_response {
+    ($expr:expr, $or:expr) => (
+        match $expr {
+            Ok(x) => x,
+            Err(_) => return Ok(Response::with(($or)))
+        }
+    )
 }
 
 fn to_json(val: redis::Value) -> String {
@@ -53,16 +58,24 @@ fn to_json(val: redis::Value) -> String {
 }
 
 fn main() {
-    let conn = redis_connection();
-    let pool = Mutex::new(conn);
+    let config = r2d2::Config::builder()
+        .connection_timeout_ms(2*1000)
+        .pool_size(3)
+        .build();
+    let manager = RedisConnectionManager::new("redis://localhost").unwrap();
+    let pool = Arc::new(r2d2::Pool::new(config, manager).unwrap());
+
 
     println!("Listening on http://localhost:3000");
     Iron::new(move |req: &mut Request| {
+        let pool = pool.clone();
         let mut path_iter = req.url.path.iter();
 
         let res : redis::RedisResult<redis::Value> ;
         {
-            let conn = pool.lock().unwrap();
+            let client = unwrap_or_error_response!(pool.get(),
+                                                   status::InternalServerError);
+            let conn = unwrap_or_error_response!(client.get_connection(), status::InternalServerError);
 
             let command = path_iter.next().unwrap();
             let mut cmd = redis::cmd(&command);
@@ -71,7 +84,7 @@ fn main() {
                 cmd.arg(p.clone());
             }
 
-            res = cmd.query(&*conn);
+            res = cmd.query(&conn);
         }
 
         match res {
