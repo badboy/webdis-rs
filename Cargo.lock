@@ -4,7 +4,7 @@ version = "0.1.0"
 dependencies = [
  "iron 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "r2d2 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "r2d2_redis 0.1.0",
+ "r2d2_redis 0.1.0 (git+https://github.com/badboy/r2d2-redis?branch=cache-connection)",
  "redis 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -242,6 +242,7 @@ dependencies = [
 [[package]]
 name = "r2d2_redis"
 version = "0.1.0"
+source = "git+https://github.com/badboy/r2d2-redis?branch=cache-connection#fab67f6ecefb8d3534b4d1f66f131a1ec1ee7eb1"
 dependencies = [
  "r2d2 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "redis 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",

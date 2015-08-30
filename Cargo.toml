@@ -7,4 +7,4 @@ authors = ["Jan-Erik Rediger <janerik@fnordig.de>"]
 iron = "*"
 redis = "*"
 r2d2 = "*"
-r2d2_redis = { path = "/home/badboy/code/rust/r2d2-redis", branch = "newer-redis"}
+r2d2_redis = { git = "https://github.com/badboy/r2d2-redis", branch = "cache-connection"}
