@@ -4,6 +4,7 @@ extern crate r2d2_redis;
 extern crate redis;
 
 use std::sync::Arc;
+use std::ops::Deref;
 use r2d2_redis::RedisConnectionManager;
 
 use iron::prelude::*;
@@ -73,9 +74,8 @@ fn main() {
 
         let res : redis::RedisResult<redis::Value> ;
         {
-            let client = unwrap_or_error_response!(pool.get(),
+            let conn = unwrap_or_error_response!(pool.get(),
                                                    status::InternalServerError);
-            let conn = unwrap_or_error_response!(client.get_connection(), status::InternalServerError);
 
             let command = path_iter.next().unwrap();
             let mut cmd = redis::cmd(&command);
@@ -84,7 +84,7 @@ fn main() {
                 cmd.arg(p.clone());
             }
 
-            res = cmd.query(&conn);
+            res = cmd.query(conn.deref());
         }
 
         match res {
