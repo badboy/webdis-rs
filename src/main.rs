@@ -5,6 +5,7 @@ extern crate redis;
 
 use std::sync::Arc;
 use std::ops::Deref;
+use std::time::Duration;
 use r2d2_redis::RedisConnectionManager;
 
 use iron::prelude::*;
@@ -60,7 +61,7 @@ fn to_json(val: redis::Value) -> String {
 
 fn main() {
     let config = r2d2::Config::builder()
-        .connection_timeout_ms(2*1000)
+        .connection_timeout(Duration::from_millis(2*1000))
         .pool_size(3)
         .build();
     let manager = RedisConnectionManager::new("redis://localhost").unwrap();
@@ -70,7 +71,7 @@ fn main() {
     println!("Listening on http://localhost:3000");
     Iron::new(move |req: &mut Request| {
         let pool = pool.clone();
-        let mut path_iter = req.url.path.iter();
+        let mut path_iter = req.url.path().into_iter();
 
         let res : redis::RedisResult<redis::Value> ;
         {
